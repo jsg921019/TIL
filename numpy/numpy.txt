@@ -1,0 +1,1351 @@
+masking,  dtype 이름짓기 추가해야됨
+
+data.item(0,0)		=> 5
+data.itemset((0,0), 5)	=> data[0,0]=5
+
+np.take(data, [0,3,6])	=> [0 3 6]  / 0,3,6 번째 item 가져옴
+np.put(data, [0,3,6],[10, 10, 10])
+=> a =  [[10  1  2]
+ 	[10  4  5]
+ 	[10  7  8]]
+
+2. 조건 인덱싱
+
+a = np.array([[1 , 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12]])
+
+print(a[a < 5])	=> [1 2 3 4]
+print(a[(a >= 5)])	=> [ 5  6  7  8  9 10 11 12]
+five_up = (a > 5) | (a == 5)
+print(five_up)	=>[[False False False False]
+ 		   [ True  True  True  True]
+ 		   [ True  True  True True]]
+
+<<Abbtributes of ndarray>>-----------------------------------------------------------------------------------------------------
+
+
+
+array_example = np.array([[[0, 1, 2, 3],
+	                      [4, 5, 6, 7]],
+	                     [[0, 1, 2, 3],
+	                      [4, 5, 6, 7]],
+	                     [[0 ,1 ,2, 3],
+	                      [4, 5, 6, 7]]])
+
+array_example.ndim			=> 3, dimention
+array_example.size				=> 24, element 개수
+array_example.shape			=> (3, 2, 4), size
+array_example.dtype			=> int32, data type
+array_example.itemsize			=> 4, element당 byte수
+
+
+
+<<Indexing and slicing>>---------------------------------------------------------------------------------------------------------
+
+
+<기본 인덱싱> : view를 반환
+
+1. standard indexing
+
+x = np.array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
+x[1:7:2]					=> array([1, 3, 5])
+
+x = np.array([[[1],[2],[3]], [[4],[5],[6]]])
+x[1:2]					=> array( [[[4],[5],[6]]] )/ x[1:2, : , :] 와 같음	
+
+
+2. ellipsis
+
+x = np.array([[[1],[2],[3]], [[4],[5],[6]]])
+x[...,0]					=> array([[1, 2, 3], / x[:, :, 0] 과 같음, :대신 int가 들어가면 차원줄음
+            					[4, 5, 6]])
+
+3. np.newaxis : 차원을 늘리는데 사용
+x.shape					=> (2,3,1)
+x[:,np.newaxis,:,:].shape			=> (2, 1, 3, 1)
+
+
+<시퀸스형 인덱싱> : copy를 반환
+
+x = np.array([[1, 2], [3, 4], [5, 6]])
+x[[0, 1, 2], [0, 1, 0]]				=> array([1, 4, 5])
+
+x = np.array([[ 0,  1,  2],
+              [ 3,  4,  5],
+              [ 6,  7,  8],
+              [ 9, 10, 11]])
+rows = np.array([[0, 0],
+                     [3, 3]], dtype=np.intp)
+columns = np.array([[0, 2],
+                         [0, 2]], dtype=np.intp)
+x[rows, columns]				=> array([[ 0,  2],
+                                                                        [ 9, 11]])
+rows = np.array([0, 3], dtype=np.intp)
+columns = np.array([0, 2], dtype=np.intp)
+rows[:, np.newaxis]
+x[rows[:, np.newaxis], columns]		=> array([[ 0,  2], / broadcasting 가능
+       						[ 9, 11]])
+
+
+<기본과 시퀸스형의 조합>
+
+x = np.array([[ 0,  1,  2],
+              [ 3,  4,  5],
+              [ 6,  7,  8],
+              [ 9, 10, 11]])
+x[1:2, [1, 2]]				=> array([[4, 5]])
+
+
+<조건형 인덱싱> : copy를 반환
+
+x = np.array([[1., 2.], [np.nan, 3.], [np.nan, np.nan]])
+x[~np.isnan(x)]					=> array([1., 2., 3.])
+
+x = np.array([1., -1., -2., 3])				
+x[x < 0] += 20					
+x						=> array([  1.,  19.,  18.,   3.])
+
+x = np.array([[0, 1], [1, 1], [2, 2]])
+rowsum = x.sum(-1)
+x[rowsum <= 2, :]					=> array([[0, 1],
+       							[1, 1]])
+
+x = np.array([[ 0,  1,  2],
+              [ 3,  4,  5],
+              [ 6,  7,  8],
+              [ 9, 10, 11]])
+rows = (x.sum(-1) % 2) == 0				=> array([False,  True, False,  True])
+columns = [0, 2]
+x[np.ix_(rows, columns)]				=> array([[ 3,  5],
+       							[ 9, 11]])
+
+<field값 인덱싱>
+
+x = np.zeros((2,2), dtype=[('a', np.int32), ('b', np.float64, (3,3))])
+x['a'].shape					=> (2, 2)
+x['b'].shape					=> (2, 2, 3, 3)
+
+
+<Flat을 이용한 1-D indexing>
+
+x = array([[1, 2, 3],
+       	 [4, 5, 6]])
+x.flat[3]				=> 4
+
+
+x.flat = 3				=>x = array([[3, 3, 3],
+       					    [3, 3, 3]])
+x.flat[[1,4]] = 1			=> x= array([[3, 1, 3],
+      					    [3, 1, 3]])
+
+
+
+<<Index 생성 함수>>--------------------------------------------------------------------------------------------------------------
+
+1. _ix : i의 index * j의 index
+
+a = array([[0, 1, 2, 3, 4],
+       	 [5, 6, 7, 8, 9]])
+ixgrid = np.ix_([0, 1], [2, 4])
+ixgrid				=> (array([[0],[1]]), array([[2, 4]]))
+a[ixgrid]				=> array([[2, 4],
+       					[7, 9]])
+
+ixgrid = np.ix_([True, True], [2, 4])
+a[ixgrid]				=> array([[2, 4],
+       					[7, 9]])
+
+ixgrid = np.ix_([True, True], [False, False, True, False, True])
+a[ixgrid]				=> array([[2, 4],
+       					[7, 9]])
+
+
+2. indicies : 입력 shape의 모든 index array 생성
+
+grid = np.indices((2, 3))			
+grid[0] 					=> array([[0, 0, 0],
+       						[1, 1, 1]])
+grid[1]					=> array([[0, 1, 2],
+       						[0, 1, 2]])
+x = np.arange(20).reshape(5, 4)
+i, j = np.indices((2, 3))
+x[i, j]					=> array([[0, 1, 2],
+       						[4, 5, 6]])
+
+3. diag_indices : 대각선 index 생성
+
+di = np.diag_indices(4)			=> (array([0, 1, 2, 3]), array([0, 1, 2, 3]))
+a = np.arange(16).reshape(4, 4)
+a[di] = 100
+a					=> array([[100,   1,   2,   3],
+       						[  4, 100,   6,   7],
+       						[  8,   9, 100,  11],
+       						[ 12,  13,  14, 100]])
+d3 = np.diag_indices(2, 3)			=> (array([0, 1]), array([0, 1]), array([0, 1]))
+a = np.zeros((2, 2, 2), dtype=int)
+a[d3] = 1
+a					=> array([[[1, 0],
+        						 [0, 0]],
+       						[[0, 0],
+       						 [0, 1]]])
+
+4. mask_indices : mask fuction의 True index 반환
+
+iu = np.mask_indices(3, np.triu)
+a = np.arange(9).reshape(3, 3)
+a					=> array([[0, 1, 2],
+       						[3, 4, 5],
+       						[6, 7, 8]])
+a[iu]					=> array([0, 1, 2, 4, 5, 8])
+
+
+5. ravel_multi_index :  어떤 어레이의 좌표가 flatten해질때의 좌표
+
+arr = np.array([[3,6,6],[4,5,1]])
+np.ravel_multi_index(arr, (7,6))		=> array([22, 41, 37])
+np.ravel_multi_index((3,1,4,1), (6,7,8,9))		=> 1621
+
+6. unravel_index : ravel_multi_index의 반대
+
+np.unravel_index([22, 41, 37], (7,6))		=> (array([3, 6, 6]), array([4, 5, 1]))
+np.unravel_index(1621, (6,7,8,9))		=> (3, 1, 4, 1)
+
+
+6. diag
+
+x = array([[0, 1, 2],
+       	[3, 4, 5],
+       	[6, 7, 8]])
+np.diag(x)		=> array([0, 4, 8])
+np.diag(x, k=1)		=> array([1, 5])
+np.diag(x, k=-1)		=> array([3, 7])
+np.diag(np.diag(x))		=> array([[0, 0, 0], / input이 1-D면 그 값을 diag로 가지는 2-D 반환
+       				[0, 4, 0],
+       				[0, 0, 8]])
+
+
+
+
+<<Broadcasting>>-----------------------------------------------------------------------------------------------------------------
+
+<원리>
+
+Broadcasting이 가능하려면 같은 축의 길이가 같거나 하나가 1 이여야함.
+
+a = array([1.0, 2.0, 3.0])
+b = array([2.0, 2.0, 2.0])
+a * b				=> array([ 2.,  4.,  6.])
+
+a = array([1.0,2.0,3.0])
+b = 2.0
+a * b				=> array([ 2.,  4.,  6.]) / b=2 가 [2.0, 2.0, 2.0]로 늘려짐
+
+
+a = array([[ 0.0,  0.0,  0.0],
+            [10.0, 10.0, 10.0],
+            [20.0, 20.0, 20.0],
+            [30.0, 30.0, 30.0]])
+b = array([1.0, 2.0, 3.0])
+a + b				=> array([[  1.,   2.,   3.],
+      					[ 11.,  12.,  13.],
+       					[ 21.,  22.,  23.],
+       					[ 31.,  32.,  33.]])
+
+a = array([0.0, 10.0, 20.0, 30.0])
+b = array([1.0, 2.0, 3.0])
+a[:,newaxis] + b			=> array([[  1.,   2.,   3.],/     0  +  1  2  3
+       					[ 11.,  12.,  13.],/   10
+       					[ 21.,  22.,  23.],/   20
+       					[ 31.,  32.,  33.]])/  30
+
+
+<관련 함수>
+
+1. broadcasting  : (x,y) iter 생성
+
+x = np.array([[1], [2], [3]])
+y = np.array([4, 5, 6])
+b = np.broadcast(x, y)
+list(b)					=> [(1, 4), (1, 5), (1, 6), (2, 4), (2, 5), (2, 6), (3, 4), (3, 5), (3, 6)]
+out = np.empty(b.shape)
+out.flat = [u+v for (u,v) in b]			=> array([[5.,  6.,  7.],  / x+y와 등일
+       						[6.,  7.,  8.],
+       						[7.,  8.,  9.]])
+
+2. broadcast_to : 원하는 shape으로 broadcast한 array
+
+x = np.array([1, 2, 3])
+np.broadcast_to(x, (3, 3))			=> array([[1, 2, 3],	/ x를 3번 참조함,.
+       						[1, 2, 3],
+      						[1, 2, 3]])
+
+3. broadcast_arrays : iter대신 리스트
+
+x = np.array([[1,2,3]])
+y = np.array([[4],[5]])
+np.broadcast_arrays(x, y)			=>[array([[1, 2, 3],[1, 2, 3]]), array([[4, 4, 4], [5, 5, 5]])]
+
+
+
+
+<<Creating Arrays>>-------------------------------------------------------------------------------------------------------------
+
+
+1. list/tuple로 생성
+np.array([1, 2, 3])			=> [1 2 3]
+
+2. 특수 생성
+np.zeros(2)			=> [0. 0.]
+np.ones(2)			=> [1. 1.]
+np.full(3, 5)			=> [5 5 5]
+np.empty(2)			=> 랜덤결과의 어레이 생성
+np.identity(3)			=> 3크기의 단위행렬 생성
+np.000_like(a, 3)			=> a와 같은 shape의 000 생성
+
+3. arange/linspace
+np.arange(4)			=> [0 1 2 3]
+np.arange(2, 9, 2)			=> [2 4 6 8]
+np.linspace(0, 10, num=5)		=> [ 0.   2.5  5.   7.5 10. ]
+
+4. random
+np.random.randint(10, 50, size=(2,3))	=>[[44 16 14]
+ 				     [43 35 16]]
+
+5. 함수이용
+np.fromfunction(lambda i, j: i == j, (3, 3), dtype=int)
+array([[ True, False, False],
+       [False,  True, False],
+       [False, False,  True]])
+
+6. iter 이용
+iterable = (x*x for x in range(5))
+np.fromiter(iterable, float)
+
+7. 문자열 읽어오기
+np.fromstring('1 2', dtype=int, sep=' ')
+np.fromstring('1, 2', dtype=int, sep=',')
+
+8. 파일에서 읽어오기
+
+-.npy로 저장/불러오기
+np.save(fname, x)		
+np.load(fname + '.npy')		=> npy는 자료형에 구애받지 않아 좋음
+
+-.txt 불러오기
+data = np.genfromtxt(file, dtype=[('myint','i8'),('myfloat','f8'), ('mystring','S5')], delimiter=",")
+
+
+
+
+<<Creating array from array using index>>---------------------------------------------------------------------------------------
+
+
+1. take : 인덱스로 a의 값에서 어레이 만들기
+
+a = [4, 3, 5, 7, 6, 8]
+np.take(a, [[0, 1], [2, 3]])			=> array([[4, 3],
+       						[5, 7]])
+
+a = np.array([[10, 30, 20], [60, 40, 50]])
+np.sort(a, axis=1)				=> array([[10, 20, 30],
+       						[40, 50, 60]])
+ai = np.argsort(a, axis=1)			=> arrray([[0, 2, 1],
+       						 [1, 2, 0]])
+np.take_along_axis(a, ai, axis=1)		=> array([[10, 20, 30],
+       						 [40, 50, 60]])
+
+2. choose : 여러 어레이에서 index 로 어레이 만들기
+
+choices = [[0, 1, 2, 3], [10, 11, 12, 13], [20, 21, 22, 23], [30, 31, 32, 33]]
+np.choose([2, 3, 1, 0], choices)		=> array([20, 31, 12,  3])
+
+
+3. select 
+
+x = np.arange(10)
+condlist = [x<3, x>5]
+choicelist = [x, x**2]
+np.select(condlist, choicelist)		=> [ 0  1  2  0  0  0 36 49 64 81]
+
+
+<<Changing shape of array>>-----------------------------------------------------------------------------------------------------
+
+
+<Reshape> 
+
+1. reshape : size맞춰야됨
+
+a = np.arange(6)				=> [0 1 2 3 4 5]
+
+b = a.reshape(3, 2)				=> [[0 1]		새 객체 만듬/ a를 참조함
+ 				  	     [2 3]
+ 				   	     [4 5]]
+b = np.reshape(a, (3, 2))			=> [[0 1]		똑같지만 shape을 튜플로
+ 				  	     [2 3]
+ 				   	     [4 5]]
+b= a.reshape(2,-1)				=> 2, 남는 길이 생성
+
+
+2. 1-D 로 reshape
+
+b= a.flatten()				=> a.reshape(-1)와 비슷/ 참조가 아니라 복사의 차이
+
+
+<Change Dimension>
+
+1. atleast_1d,atleast_2d,atleast_3d
+
+x = np.arange(3.0)
+np.atleast_2d(x)				=> array([[0., 1., 2.]])
+
+2. expand_dims
+
+a = np.array([1, 2, 3, 4, 5, 6])		=> a.shape : (6,)
+b = np.expand_dims(a, axis=1)	=> b.shape : (6, 1) : x[:, np.newaxis] 와 같음
+c = np.expand_dims(a, axis=0)	=> c.shape : (1, 6) : a[np.newaxis, :] 와 같음
+
+3. newaxis : None이랑 같음
+a = np.array([1, 2, 3, 4, 5, 6])	
+a2 = a[np.newaxis, :]		=> a2.shape : (1,6)
+
+row_vector = a[np.newaxis, :]	=> row_vector.shape : (1, 6)
+col_vector = a[:, np.newaxis]		=> col_vector.shape : (6, 1)
+
+4. squeeze : expand_dims 와 반대
+
+x = np.array([[[0], [1], [2]]])
+np.squeeze(x).shape		=> (3,)
+np.squeeze(x, axis=0).shape      	=> (3, 1)
+
+
+
+
+<Join / Split>---------------------------------------------------------------------------------------------------------------------
+
+
+
+<Tiling array >
+
+1. tile : array 쌓기
+a = np.array([0, 1, 2])
+np.tile(a, 2)		=> array([0, 1, 2, 0, 1, 2])
+np.tile(a, (2, 2))		=> array([[0, 1, 2, 0, 1, 2],
+       				[0, 1, 2, 0, 1, 2]])
+np.tile(a, (2, 1, 2))		=> array([[[0, 1, 2, 0, 1, 2]],
+       				[[0, 1, 2, 0, 1, 2]]])
+
+2. repeat : element 쌓기
+
+np.repeat(3, 4)		=> array([3, 3, 3, 3])
+x = np.array([[1,2],[3,4]])
+np.repeat(x, 2)		=> array([1, 1, 2, 2, 3, 3, 4, 4])
+np.repeat(x, 3, axis=1)	=> array([[1, 1, 1, 2, 2, 2],
+       				[3, 3, 3, 4, 4, 4]])
+np.repeat(x, [1, 2], axis=0)	=> array([[1, 2],
+       				[3, 4],
+       				[3, 4]])
+
+
+<Joining arrays>
+
+1. concatenate : 이미 있는 axis 방향으로 합침 -> 차원 유지
+a = np.array([1, 2, 3, 4])
+b = np.array([5, 6, 7, 8])
+
+np.concatenate((a, b))		=> array([1, 2, 3, 4, 5, 6, 7, 8])
+
+x = np.array([[1, 2], [3, 4]])
+y = np.array([[5, 6]])
+
+np.concatenate((x, y), axis=0) 	=> array([[1, 2], / axis =None이면 flatten
+      					[3, 4],
+       					[5, 6]])
+
+2. stack : 없는 axis 방향으로 합침 -> 차원 추가
+
+a = np.array([1, 2, 3])
+b = np.array([2, 3, 4])
+
+np.stack((a, b))		=> array([[1, 2, 3],
+       				[2, 3, 4]])
+np.stack((a, b), axis=-1)	=> array([[1, 2], / axis =-1이면 마지막 axis
+       				[2, 3],
+       				[3, 4]])
+
+
+3. v/h/d/column stack : 특정한 방향으로 stack
+
+a = np.array([1, 2, 3])
+b = np.array([2, 3, 4])
+np.vstack((a,b))		=> array([[1, 2, 3], axis가 1
+       				[2, 3, 4]])
+
+a = np.array((1,2,3))
+b = np.array((2,3,4))
+np.hstack((a,b))		=> array([1, 2, 3, 2, 3, 4]) axis가 2
+
+a = np.array((1,2,3))
+b = np.array((2,3,4))
+np.dstack((a,b))		=> array([[[1, 2], axis 추가
+        				[2, 3],
+        				[3, 4]]])
+np.column_stack((a,b))
+array([[1, 2],
+       [2, 3],
+       [3, 4]]
+
+4. block : 여러 어레이 합침
+
+AAAbb
+AAAbb
+cDDDD
+
+A = np.eye(2) * 2
+B = np.eye(3) * 3
+np.block([
+    [A,               np.zeros((2, 3))],
+    [np.ones((3, 2)), B               ]
+
+
+
+<Splitting arrays>
+
+1.split
+
+x = np.arange(9.0)
+np.split(x, 3)		=> [array([0.,  1.,  2.]), array([3.,  4.,  5.]), array([6.,  7.,  8.])]/ 3개분할
+
+x = np.arange(8.0)
+np.split(x, [3, 5, 6, 10])	=> 구간분할
+[array([0.,  1.,  2.]),
+ array([3.,  4.]),
+ array([5.]),
+ array([6.,  7.]),
+ array([], dtype=float64)]
+
+x = np.arange(8.0)
+np.array_split(x, 3)		=> [array([0.,  1.,  2.]), array([3.,  4.,  5.]), array([6.,  7.])]/ array_split은 등분아니여도 됨
+
+2. dsplit/hsplit
+
+dsplit은 split(axis=2), hsplit은 split(axis=1)
+
+
+
+<<Rearrange elements>>---------------------------------------------------------------------------------------------------------
+
+
+1.Transpose
+
+np.array([[1,2,],[3,4,]]).T			=> [[1 3] / 본 어레이를 참조
+ 					     [2 4]]
+a.transpose()				=> 같음
+
+x = np.ones((1, 2, 3))
+np.transpose(x, (1, 0, 2)).shape		=> 바꾸는 축 설정 가능
+(2, 1, 3)
+
+x = np.array([[1,2,3]])	
+np.swapaxes(x,0,1)				=> 축 2개만 바꿀떄
+array([[1],
+       [2],
+       [3]])
+
+
+2. flip
+
+A =array([[[0, 1],
+        	 [2, 3]],
+            [[4, 5],
+       	 [6, 7]]])
+np.flip(A, 0)	=> array([[[4, 5], /flip(m, 0) is equivalent to flipud(m)
+        			[6, 7]],
+       			[[0, 1],
+        			[2, 3]]])
+
+np.flip(A, 1)	=> array([[[2, 3], / fliplr 과 같음. 오른쪽 왼쪽 대칭시킨거
+        			[0, 1]],
+       			[[6, 7],
+        			[4, 5]]])
+
+np.flip(A)		=> array([[[7, 6],
+        			[5, 4]],
+       			[[3, 2],
+        			[1, 0]]])
+
+np.flip(A, (0, 2))	=> array([[[5, 4],
+        			[7, 6]],
+       			[[1, 0],
+        			[3, 2]]])
+
+A = np.random.randn(3,4,5)
+np.all(np.flip(A,2) == A[:,:,::-1,...])	=> True
+
+
+3. roll
+
+x = np.arange(10)
+np.roll(x, 2)		=> array([8, 9, 0, 1, 2, 3, 4, 5, 6, 7])
+np.roll(x, -2)		=> array([2, 3, 4, 5, 6, 7, 8, 9, 0, 1])
+
+x2 = array([[0, 1, 2, 3, 4],
+              [5, 6, 7, 8, 9]])
+np.roll(x2, 1)		=> array([[9, 0, 1, 2, 3],
+       			            [4, 5, 6, 7, 8]])
+np.roll(x2, 1, axis=0)	=> array([[5, 6, 7, 8, 9],
+       				[0, 1, 2, 3, 4]])
+
+
+4. rot90
+
+m = array([[1, 2],
+             [3, 4]])
+np.rot90(m)			=> array([[2, 4],
+       					[1, 3]])
+np.rot90(m, 2)			=> array([[4, 3],
+       					[2, 1]])
+m = np.arange(8).reshape((2,2,2))
+np.rot90(m, 1, (1,2))		=> array([[[1, 3],
+        					 [0, 2]],
+       					[[5, 7],
+        					 [4, 6]]])
+
+
+
+<<Adding, Removing, Changing elements>>-------------------------------------------------------------------------------------
+
+
+<deleting element>
+
+1. delete : mask를 이용하는게 나을 수 있음
+
+arr = np.array([[1,2,3,4], [5,6,7,8], [9,10,11,12]])
+np.delete(arr, 1, 0)				=> array([[ 1,  2,  3,  4], / 0축 방향으로 1번째 삭제
+       						[ 9, 10, 11, 12]])
+np.delete(arr, np.s_[::2], 1)			=> array([[ 2,  4],
+       						[ 6,  8],
+       						[10, 12]])
+np.delete(arr, [1,3,5], None)			=> array([ 1,  3,  5,  7,  8,  9, 10, 11, 12])
+
+
+2. trim_zeros : numpy계의 strip, 양끝 0 지워줌
+
+a = np.array((0, 0, 0, 1, 2, 3, 0, 2, 1, 0))
+np.trim_zeros(a)				=> array([1, 2, 3, 0, 2, 1])
+np.trim_zeros(a, 'b')			=> array([0, 0, 0, ..., 0, 2, 1]) ,'b'는 끝, 'f'는 앞
+
+
+<Adding element>
+
+1. insert
+
+a = np.array([[1, 1], [2, 2], [3, 3]])
+np.insert(a, 1, 5)				=> array([1, 5, 1, ..., 2, 3, 3])
+np.insert(a, 1, 5, axis=1)			=> array([[1, 5, 1],
+       						[2, 5, 2],
+       						[3, 5, 3]])
+
+2. append : 이어붙이기
+
+np.append([1, 2, 3], [[4, 5, 6], [7, 8, 9]])	=> array([1, 2, 3, ..., 7, 8, 9])
+np.append([[1, 2, 3], [4, 5, 6]], [[7, 8, 9]], axis=0)	=> array([[1, 2, 3],
+       						[4, 5, 6],
+       						[7, 8, 9]])
+
+3. pad
+
+a = [1, 2, 3, 4, 5]
+np.pad(a, (2, 3), 'constant', constant_values=(4, 6))	=> array([4, 4, 1, ..., 6, 6, 6])
+np.pad(a, (2, 3), 'edge')				=> array([1, 1, 1, ..., 5, 5, 5]) / 끝 value로 연장
+np.pad(a, (2, 3), 'linear_ramp', end_values=(5, -4))	=> array([ 5,  3,  1,  2,  3,  4,  5,  2, -1, -4])
+np.pad(a, (2,), 'maximum')				=> array([5, 5, 1, 2, 3, 4, 5, 5, 5])
+np.pad(a, (2,), 'mean')				=> array([3, 3, 1, 2, 3, 4, 5, 3, 3])
+np.pad(a, (2,), 'median')				=> array([3, 3, 1, 2, 3, 4, 5, 3, 3])
+
+a = [[1, 2], [3, 4]]
+np.pad(a, ((3, 2), (2, 3)), 'minimum')
+array([[1, 1, 1, 2, 1, 1, 1],
+       [1, 1, 1, 2, 1, 1, 1],
+       [1, 1, 1, 2, 1, 1, 1],
+       [1, 1, 1, 2, 1, 1, 1],
+       [3, 3, 3, 4, 3, 3, 3],
+       [1, 1, 1, 2, 1, 1, 1],
+       [1, 1, 1, 2, 1, 1, 1]])
+
+a = [1, 2, 3, 4, 5]
+np.pad(a, (2, 3), 'reflect')				=> array([3, 2, 1, 2, 3, 4, 5, 4, 3, 2]) 
+np.pad(a, (2, 3), 'reflect', reflect_type='odd')		=> array([-1,  0,  1,  2,  3,  4,  5,  6,  7,  8])
+np.pad(a, (2, 3), 'symmetric')				=> array([2, 1, 1, 2, 3, 4, 5, 5, 4, 3])
+np.pad(a, (2, 3), 'symmetric', reflect_type='odd')		=> array([0, 1, 1, 2, 3, 4, 5, 5, 6, 7])
+np.pad(a, (2, 3), 'wrap')				=> array([4, 5, 1, 2, 3, 4, 5, 1, 2, 3])
+
+
+4. resize : 크기 바꾸기...줄일땐 인덱싱, 키울땐 padding이 더 낫다고 함
+
+b = np.resize(a, (3,4))			=> [[0 1 2 3]	size 안맞으면 복사본으로 채움
+ 					      [4 5 0 1]
+				                  [2 3 4 5]]
+
+
+<Changing element>
+
+1. place : 조건에 의한 교체 / putmask : 똑같은거 같은데..
+
+arr = np.arange(6).reshape(2, 3)
+np.place(arr, arr>2, [44, 55])		=> array([[ 0,  1,  2],
+       					[44, 55, 44]])
+
+2. put : index에 의한 교체, a.flat[ind] = v 와 비슷
+
+a = np.arange(5)
+np.put(a, [0, 2], [-44, -55])		=> array([-44,   1, -55,   3,   4])
+
+3. put_along_axis
+
+a = np.array([[10, 30, 20], [60, 40, 50]])
+ai = np.expand_dims(np.argmax(a, axis=1), axis=1)	=> array([[1],
+       							[0]])
+np.put_along_axis(a, ai, 99, axis=1)			=> array([[10, 99, 20],
+       							[99, 40, 50]])
+
+3. fill_diagonal
+
+a = np.zeros((3, 3), int)
+np.fill_diagonal(a, 5)		=> array([[5, 0, 0],
+       					[0, 5, 0],
+       					[0, 0, 5]])
+
+
+
+<<Sorting>>----------------------------------------------------------------------------------------------------------------------
+
+
+1. sort
+
+a = np.array([[1,4],[3,1]])
+np.sort(a)                		=> array([[1, 4], / sort along the last axis
+       					[1, 3]])
+np.sort(a, axis=None)		=> array([1, 1, 3, 4])     # sort the flattened array
+
+np.sort(a, axis=0) 			=> array([[1, 1], # sort along the first axis
+       					[3, 4]])
+
+Use the order keyword to specify a field to use when sorting a structured array:
+
+dtype = [('name', 'S10'), ('height', float), ('age', int)]
+values = [('Arthur', 1.8, 41), ('Lancelot', 1.9, 38),
+          ('Galahad', 1.7, 38)]
+a = np.array(values, dtype=dtype)       # create a structured array
+np.sort(a, order='height')             	=> array([('Galahad', 1.7, 38), ('Arthur', 1.8, 41),
+       					('Lancelot', 1.9, 38)],
+      					dtype=[('name', '|S10'), ('height', '<f8'), ('age', '<i4')])
+Sort by age, then height if ages are equal:
+np.sort(a, order=['age', 'height'])               
+
+
+2. ndarray.sort : sort랑 같지만 inplace
+
+
+3. argsort : index를 반환
+
+x = np.array([3, 1, 2])
+np.argsort(x)					=> array([1, 2, 0])
+
+x = np.array([[0, 3], [2, 2]])
+ind = np.argsort(x, axis=0)  				=> array([[0, 1],
+       							[1, 0]])
+
+x = np.array([(1, 0), (0, 1)], dtype=[('x', '<i4'), ('y', '<i4')])
+np.argsort(x, order=('x','y'))				=> array([1, 0])
+np.argsort(x, order=('y','x'))				=> array([0, 1])
+
+
+4. lexsort : 약간 엑셀처럼 정렬
+
+a = [1,5,1,4,3,4,4] # First column
+b = [9,4,0,4,0,2,1] # Second column
+ind = np.lexsort((b,a)) # Sort by a, then by b
+ind						=> array([2, 0, 4, 6, 5, 3, 1])
+[(a[i],b[i]) for i in ind]				=> [(1, 0), (1, 9), (3, 0), (4, 1), (4, 2), (4, 4), (5, 4)]
+
+
+5. partition : n보다 작은건 왼쪽 큰건 오른쪽
+
+a = np.array([3, 4, 2, 1])
+np.partition(a, 3)			=> array([2, 1, 3, 4])
+np.partition(a, (1, 3))		=> array([1, 2, 3, 4])
+
+
+6. argpartition : partition이랑 같지만 index 반환
+
+x = np.array([3, 4, 2, 1])
+x[np.argpartition(x, 3)]		=> array([2, 1, 3, 4]) / np.partition(x,3)이랑 같음
+x[np.argpartition(x, (1, 3))]		=> array([1, 2, 3, 4])
+
+
+
+<<Searching/ Counting>>--------------------------------------------------------------------------------------------------------
+
+
+<Searching>
+
+1. argmax/ argmin : 최대값의 인덱스 (1개만)
+
+a =array([[10, 11, 12],
+           [13, 14, 15]])
+np.argmax(a)		=> 5
+np.argmax(a, axis=0)	=> array([1, 1, 1])
+np.argmax(a, axis=1)	=> array([2, 2])
+
+ind = np.unravel_index(np.argmax(a, axis=None), a.shape)
+ind			=> (1, 2)
+a[ind]			=> 15
+
+b = array([0, 5, 2, 3, 4, 5])
+np.argmax(b)  		=> 1/ Only the first occurrence is returned.
+
+
+2. searchsorted : bisect의 numpy 버전
+
+np.searchsorted([1,2,3,4,5], 3)		=> 2
+np.searchsorted([1,2,3,4,5], 3, side='right')	=> 3
+np.searchsorted([1,2,3,4,5], [-10, 10, 2, 3])	=> array([0, 5, 1, 2])
+
+3. in1d 
+test = np.array([0, 1, 2, 5, 0])
+states = [0, 2]
+mask = np.in1d(test, states)			=> array([ True, False,  True, False,  True])
+test[mask]				=> array([0, 2, 0])
+mask = np.in1d(test, states, invert=True)	=> array([False,  True, False,  True, False])
+test[mask]				=> array([1, 5])
+
+4. isin : in1d의 다차원 버전
+
+element	= array([[0, 2],
+                      [4, 6]])
+test_elements = [1, 2, 4, 8]
+mask = np.isin(element, test_elements)		=> array([[False,  True],
+       							[ True, False]])
+
+The indices of the matched values can be obtained with nonzero:
+np.nonzero(mask)					=> (array([0, 1]), array([1, 0]))
+
+The test can also be inverted:
+mask = np.isin(element, test_elements, invert=True)
+
+
+<Counting>
+
+np.count_nonzero(np.eye(4))			=> 4
+
+a = np.array([[0, 1, 7, 0],
+                [3, 0, 2, 19]])
+np.count_nonzero(a)			=> 5
+np.count_nonzero(a, axis=0)			=> array([1, 1, 2, 1])
+np.count_nonzero(a, axis=1, keepdims=True)	=> array([[2],
+       						[3]])
+
+
+
+<<Filter>>-------------------------------------------------------------------------------------------------------------------------
+
+
+1. argwhere : nonzero(a[조건])이 더 나음, 모양이 다름
+
+x =  array([[0, 1, 2],
+       	 [3, 4, 5]])
+np.argwhere(x>1)		=> array([[0, 2],
+       				[1, 0],
+       				[1, 1],
+       				[1, 2]])
+
+2. nonzero : 0이 아닌값들의 index, mask랑 같이쓰면 조건 만족하는 것들의 index
+
+x = np.array([[3, 0, 0], [0, 4, 0], [5, 6, 0]])
+np.nonzero(x)				=> (array([0, 1, 2, 2]), array([0, 1, 0, 1]))
+x[np.nonzero(x)]				=> array([3, 4, 5, 6])
+
+a = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
+np.nonzero(a > 3)				=> (array([1, 1, 1, 2, 2, 2]), array([0, 1, 2, 0, 1, 2]))
+
+(a > 3).nonzero()				=> (array([1, 1, 1, 2, 2, 2]), array([0, 1, 2, 0, 1, 2])) / 메소드로도 쓸수있음
+
+
+3. flatnonzero: flatten한 어레이의 nonzero
+
+x = array([-2, -1,  0,  1,  2])
+np.flatnonzero(x)		=> array([0, 1, 3, 4])
+x.ravel()[np.flatnonzero(x)]	=> array([-2, -1,  1,  2])
+
+
+
+4. extract : np.compress(ravel(condition), ravel(arr)) 과 같음, condition이 boolean이면 arr[condtion]과 동일
+
+arr = array([[ 0,  1,  2,  3],
+       	   [ 4,  5,  6,  7],
+      	   [ 8,  9, 10, 11]])
+condition = np.mod(arr, 3)==0
+np.extract(condition, arr)		=> array([0, 3, 6, 9])
+
+
+5. compress : True 값만 모음
+
+a = np.array([[1, 2], [3, 4], [5, 6]])
+np.compress([0, 1], a, axis=0)		=> array([[3, 4]])
+np.compress([False, True, True], a, axis=0)	=> array([[3, 4],
+       						[5, 6]])
+np.compress([False, True], a, axis=1)		=> array([[2],
+       						[4],
+       						[6]])
+
+
+<<Mapping>>---------------------------------------------------------------------------------------------------------------------
+
+
+1. apply_along_axis	: 한개축
+
+def my_func(a):
+    """Average first and last element of a 1-D array"""
+    return (a[0] + a[-1]) * 0.5
+b = np.array([[1,2,3], [4,5,6], [7,8,9]])
+np.apply_along_axis(my_func, 0, b)	=>array([4., 5., 6.])
+np.apply_along_axis(my_func, 1, b)	=>array([2.,  5.,  8.])
+
+2. apply_over_axis : 여러축
+
+a =array([[[ 0,  1,  2,  3],
+             [ 4,  5,  6,  7],
+             [ 8,  9, 10, 11]],
+            [[12, 13, 14, 15],
+             [16, 17, 18, 19],
+             [20, 21, 22, 23]]])
+
+np.apply_over_axes(np.sum, a, [0,2])	=> array([[[ 60], / 0축으로 더하고 그 더한것을 2축으로 더하고.. 
+        					  [ 92],  면끼리 더한다고 생각하면 됨
+       					  [124]]])
+
+4. where : True, False 별로 함수적용 numpy계의 if else
+
+a = array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
+np.where(a < 5)				=> nonzero(a<5) 랑 같음
+np.where(a < 5, a, 10*a)			=> array([ 0,  1,  2,  3,  4, 50, 60, 70, 80, 90])
+
+np.where([[True, False], [True, True]], [[1, 2],[3, 4]], [[9, 8],[7, 6]])  => array([[1, 8], [3, 4]])
+
+a = np.array([[0, 1, 2],
+              [0, 2, 4],
+              [0, 3, 6]])
+
+np.where(a < 4, a, -1)  # -1 is broadcast	=> array([[ 0,  1,  2],
+       						[ 0,  2, -1],
+       						[ 0,  3, -1]])
+
+5. select
+
+x = np.arange(10)
+condlist = [x<3, x>5]
+choicelist = [x, x**2]
+np.select(condlist, choicelist)		=> [ 0  1  2  0  0  0 36 49 64 81]
+
+
+<<논리 함수>>-------------------------------------------------------------------------------------------------------------------
+
+1. all /any
+
+np.all([[True,False],[True,True]])		=> False
+np.all([[True,False],[True,True]], axis=0)		=> array([ True, False])
+np.any(a>1, axis=1)
+
+2. >,<,==,!= 다 호환됨
+
+3. isinf, isreal
+
+
+<<집합 연산>>-------------------------------------------------------------------------------------------------------------------
+
+1. unique
+
+a = np.array([[1, 1], [2, 3]])
+np.unique(a)				=> array([1, 2, 3])
+
+a = np.array([[1, 0, 0], [1, 0, 0], [2, 3, 4]])
+np.unique(a, axis=0)			=> array([[1, 0, 0], [2, 3, 4]])
+
+a = np.array(['a', 'b', 'b', 'c', 'a'])
+u, indices = np.unique(a, return_index=True)	
+u					=> array(['a', 'b', 'c'], dtype='<U1')
+indices					=> array([0, 1, 3])
+a[indices]					=> array(['a', 'b', 'c'], dtype='<U1')
+
+a = np.array([1, 2, 6, 4, 2, 3, 2])
+u, indices = np.unique(a, return_inverse=True)
+u					=> array([1, 2, 3, 4, 6])
+indices					=> array([0, 1, 4, 3, 1, 2, 1])
+u[indices]					=> array([1, 2, 6, 4, 2, 3, 2]) : a 랑 같음
+
+a = np.array([1, 2, 6, 4, 2, 3, 2])
+values, counts = np.unique(a, return_counts=True)
+values					=> array([1, 2, 3, 4, 6])
+counts					=> array([1, 3, 1, 1, 1])
+np.repeat(values, counts)			=> array([1, 2, 2, 2, 3, 4, 6])    # original order not preserved
+
+
+2. intersect1d : 교집합
+
+np.intersect1d([1, 3, 4, 3], [3, 1, 2, 1])		=>array([1, 3])
+
+To intersect more than two arrays, use functools.reduce:
+from functools import reduce
+reduce(np.intersect1d, ([1, 3, 4, 3], [3, 1, 2, 1], [6, 3, 4, 2]))	=> array([3])
+
+To return the indices of the values common to the input arrays along with the intersected values:
+x = np.array([1, 1, 2, 3, 4])
+y = np.array([2, 1, 4, 6])
+xy, x_ind, y_ind = np.intersect1d(x, y, return_indices=True)
+x_ind, y_ind						=> (array([0, 2, 4]), array([1, 0, 2]))
+xy, x[x_ind], y[y_ind]					=> (array([1, 2, 4]), array([1, 2, 4]), array([1, 2, 4]))
+
+
+3. setdiff1d : 차집합
+
+a = np.array([1, 2, 3, 2, 4, 1])
+b = np.array([3, 4, 5, 6])
+np.setdiff1d(a, b)			=> array([1, 2])
+
+6. setxor1d : 교집합의 여집합
+
+a = np.array([1, 2, 3, 2, 4])
+b = np.array([2, 3, 5, 7, 5])
+np.setxor1d(a,b)			=> array([1, 4, 5, 7])
+
+7. union1d : 합집합
+
+np.union1d([-1, 0, 1], [-2, 0, 2])	=> array([-2, -1,  0,  1,  2])
+
+To find the union of more than two arrays, use functools.reduce:
+from functools import reduce
+reduce(np.union1d, ([1, 3, 4, 3], [3, 1, 2, 1], [6, 3, 4, 2]))	=> array([1, 2, 3, 4, 6])
+
+
+<<Iter>>------------------------------------------------------------------------------------------------------------------------
+
+1. nditer
+
+a = np.arange(6).reshape(2,3)
+for x in np.nditer(a):
+    print(x, end=' ')			=> 0 1 2 3 4 5
+
+2. ndenumerate
+
+a = np.array([[1, 2], [3, 4]])
+for index, x in np.ndenumerate(a):
+    print(index, x)
+(0, 0) 1
+(0, 1) 2
+(1, 0) 3
+(1, 1) 4
+
+3. ndindex
+
+for index in np.ndindex(3, 2, 1):
+    print(index)
+(0, 0, 0) (0, 1, 0) (1, 0, 0) (1, 1, 0) (2, 0, 0) (2, 1, 0)
+
+4.flatiter : a.flat 랑 같은듯
+
+
+<<Functional programming>>--------------------------------------------------------------------------------------------------
+
+
+1. vertorize : 파이썬 함수를 벡터입력을 받을 수 있도록 확장시킴/ broadcasting rule 적용
+
+def myfunc(a, b):
+    "Return a-b if a>b, otherwise return a+b"
+    if a > b: return a - b
+    else:  return a + b
+vfunc = np.vectorize(myfunc)
+vfunc([1, 2, 3, 4], 2)				=> array([3, 4, 1, 2])
+
+def mypolyval(p, x):
+    _p = list(p)
+    res = _p.pop(0)
+    while _p: res = res*x + _p.pop(0)
+    return res
+vpolyval = np.vectorize(mypolyval, excluded=['p'])               / p는 원래 list형식이니까 벡로라이즈 안시킴
+vpolyval(p=[1, 2, 3], x=[0, 1])				=> array([3, 6])
+
+
+2. frompyfunc : vectorize랑 같은거 같은데 잘모르겟음 ㅋ
+
+oct_array = np.frompyfunc(oct, 1, 1)
+print(oct_array(np.array((10, 30, 100))))			=> print(np.array((oct(10), oct(30), oct(100))))
+
+5. piecewise : 조건별로 함수 적용
+
+x = np.linspace(-2.5, 2.5, 6)
+np.piecewise(x, [x < 0, x >= 0], [-1, 1])				=> array([-1., -1., -1.,  1.,  1.,  1.])
+
+np.piecewise(x, [x < 0, x >= 0], [lambda x: -x, lambda x: x])	=> array([2.5,  1.5,  0.5,  0.5,  1.5,  2.5])
+
+y = -2
+np.piecewise(y, [y < 0, y >= 0], [lambda x: -x, lambda x: x])	=> array(2)
+
+
+
+
+<<Random>>--------------------------------------------------------------------------------------------------------------------
+
+<랜덤수 생성>
+
+
+1. random
+
+import numpy as np
+rng = np.random.default_rng(12345)	=> seed =12345
+print(rng)				=> Generator(PCG64)
+rfloat = rng.random()		=> 0.22733602246716966
+	
+2. integers
+
+rints = rng.integers(low=0, high=10, size=3)	=> array([6, 2, 7])
+
+arr1 = rng.random((3, 3))			=> array([[0.77395605, 0.43887844, 0.85859792],
+       						[0.69736803, 0.09417735, 0.97562235],
+       						[0.7611397 , 0.78606431, 0.12811363]])
+
+<섞기>
+
+1. permutation : view
+
+rg = np.random.default_rng()
+x = np.arange(0, 15).reshape(3, 5)		=> array([[ 0,  1,  2,  3,  4],
+       						[ 5,  6,  7,  8,  9],
+       						[10, 11, 12, 13, 14]])
+print(rg.permutation(x, axis=1))		=> [[ 3  2  1  4  0] / copy
+ 					     [ 8  7  6  9  5]
+ 					     [13 12 11 14 10]]
+
+2. shuffle : in place
+
+a = ['A', 'B', 'C', 'D', 'E']
+rg.shuffle(a)
+a					=> ['B', 'D', 'A', 'E', 'C']
+
+
+
+<<Polynomials>>------------------------------------------------------------------------------------------------------------------
+
+
+1. 생성
+
+from numpy.polynomial import Polynomial as P
+p = P([1,2,3])				=> 1+2*x+3*x^2
+
+2. 연산
+p + p		=> Polynomial([2., 4., 6.], domain=[-1.,  1.], window=[-1.,  1.])
+p - p		=> Polynomial([0.], domain=[-1.,  1.], window=[-1.,  1.])
+p * p		=> Polynomial([ 1.,   4.,  10.,  12.,   9.], domain=[-1.,  1.], window=[-1.,  1.])
+p**2		=> Polynomial([ 1.,   4., 10., 12.,  9.], domain=[-1.,  1.], window=[-1.,  1.])
+p(p)		=> Polynomial([ 6., 16., 36., 36., 27.], domain=[-1.,  1.], window=[-1.,  1.])
+quo, rem = divmod(p, P([-1, 1]))
+quo		=> Polynomial([5.,  3.], domain=[-1.,  1.], window=[-1.,  1.])
+rem		=> Polynomial([6.], domain=[-1.,  1.], window=[-1.,  1.])
+
+3. 대입
+
+x = np.arange(5)
+p(x)		=> array([  1.,   6.,  17.,  34.,  57.])
+x = np.arange(6).reshape(3,2)
+p(x)		=> array([[  1.,   6.],
+       			[ 17.,  34.],
+       			[ 57.,  86.]])
+
+4. 근구하기
+p.roots()		=> array([-0.33333333-0.47140452j, -0.33333333+0.47140452j])
+
+p = P.fromroots([1, 2, 3])	=> Polynomial([-6., 11., -6.,  1.]) / 근에서 다항식으로
+
+5. 미분 적분
+
+p = P([2, 6])
+p.integ()		=> Polynomial([0., 2., 3.])
+p.integ(2)		=> Polynomial([0., 0., 1., 1.]) / 2번적분
+p.integ(lbnd=-1)	=> Polynomial([-1.,  2.,  3.]) / -1에서 x까지
+p.integ(lbnd=-1, k=1)	=> Polynomial([0., 2., 3.)/ c=1
+
+p = P([1, 2, 3])
+p.deriv(1)			=>Polynomial([2., 6.])
+p.deriv(2)			=>Polynomial([6.)
+
+
+
+<<Linear Algebra>>--------------------------------------------------------------------------------------------------------------
+
+
+<곱 연산 >
+
+1. dot
+
+a = [[1, 0], [0, 1]]
+b = [[4, 1], [2, 2]]
+np.dot(a, b)	=> array([[4, 1],
+       			[2, 2]])
+
+2. multi_dot
+
+ A = np.random.random((10000, 100))
+B = np.random.random((100, 1000))
+C = np.random.random((1000, 5))
+D = np.random.random((5, 333))
+
+_= multi_dot([A, B, C, D])  =>  _ = A.dot(B).dot(C).dot(D) 과 같음
+
+3. vdot
+
+a = np.array([[1, 4], [5, 6]])
+b = np.array([[4, 1], [2, 2]])
+np.vdot(a, b)	=> 30 / 1*4 + 4*1 + 5*2 + 6*2
+
+
+<행렬연산>
+
+1. matmul
+
+a = np.array([[1, 0],
+                 [0, 1]])
+b = np.array([[4, 1],
+                 [2, 2]])
+np.matmul(a, b)			=> array([[4, 1],
+       					[2, 2]])
+
+2. matrix_power
+
+i = np.array([[0, 1], [-1, 0]])
+matrix_power(i, 3) 			=> array([[ 0, -1],
+       					[ 1,  0]])
+
+<기타>
+
+1. det : 판별식
+
+a = np.array([[1, 2], [3, 4]])
+np.linalg.det(a)			=> -2.0
+
+2. solve : ax =b 해 구하기
+
+a = np.array([[3,1], [1,2]])
+b = np.array([9,8])
+x = np.linalg.solve(a, b)
+x
+array([2.,  3.])
+
+3. inverse : 역함수
+
+a = np.array([[1., 2.], [3., 4.]])
+ainv = inv(a)
+
+
+
+<<Math>>------------------------------------------------------------------------------------------------------------------------
+
+
+<일반>
+
+1. 삼각함수
+ex) np.sin(np.array((0., 30., 45., 60., 90.)) * np.pi / 180. )	=> array([ 0.  ,  0.5 ,  0.70710678,  0.8660254 ,  1.  ])
+
+2. 곱
+np.prod([[1.,2.],[3.,4.]])		=> 24.0
+np.prod([[1.,2.],[3.,4.]], axis=1)	=> array([  2.,  12.])
+np.prod([1, 2], initial=5)		=> 10
+
+3. 합
+np.sum([[0, 1], [0, 5]], axis=0)		=> array([0, 6])
+
+4. 누적
+a = np.array([1,2,3])
+np.cumprod(a)			=> array([1, 2, 6])
+a = np.array([[1,2,3], [4,5,6]])
+np.cumsum(a,axis=0)      		=> array([[1, 2, 3],
+       					[5, 7, 9]])
+
+4. 차
+x = np.array([1, 2, 4, 7, 0])
+np.diff(x)				=> array([ 1,  2,  3, -7])
+np.diff(x, n=2)			=> array([  1,   1, -10])
+
+
+5. lcm/ gcd
+
+np.gcd(12, 20)			=> 4
+np.gcd.reduce([15, 25, 35])		=> 5
+np.gcd(np.arange(6), 20)		=> array([20,  1,  2,  1,  4,  5])
+
+
+6. maximum, minimum : 2개의 어레이의 각 element 비교
+
+np.maximum([2, 3, 4], [1, 5, 2])			=> array([2, 5, 4])
+np.maximum(np.eye(2), [0.5, 2]) 			=> array([[ 1. ,  2. ],# broadcasting
+       							[ 0.5,  2. ]])
+
+7. interpolation
+
+xp = [1, 2, 3] / x축값
+fp = [3, 2, 0]/  y축값
+np.interp(2.5, xp, fp)			=> 1.0
+np.interp([0, 1, 1.5, 2.72, 3.14], xp, fp)		=> array([3.  , 3.  , 2.5 , 0.56, 0.  ])
+
+
+<Statistics>
+
+1. amin/amax
+
+a = array([[0, 1],
+       	 [2, 3]])
+np.amin(a)          					=> 0  # Minimum of the flattened array
+np.amin(a, axis=0)   				=> array([0, 1] )# Minima along the first axis
+np.amin(a, where=[False, True], initial=10, axis=0)	=> array([10,  1])
+np.min([[-50], [10]], axis=-1, initial=0)			=>array([-50,   0])
+
+2. ptp : maximum-minimum / -가 나올수도 잇음
+
+x = np.array([[4, 9, 2, 10],
+                [6, 9, 7, 12]])
+np.ptp(x, axis=1)					=> array([8, 6])
+np.ptp(x, axis=0)					=> array([2, 0, 5, 2])
+np.ptp(x)						=> 10
+
+y = np.array([[1, 127],
+                [0, 127],
+                [-1, 127],
+                [-2, 127]], dtype=np.int8)
+np.ptp(y, axis=1)					=> array([ 126,  127, -128, -127], dtype=int8)
+A work-around is to use the view() method to view the result as unsigned integers with the same bit width:
+np.ptp(y, axis=1).view(np.uint8)			=> array([126, 127, 128, 129], dtype=uint8)
+
+3. median : 중앙값
+
+a = array([[10,  7,  4],
+       	 [ 3,  2,  1]])
+np.median(a)				=> 3.5
+np.median(a, axis=0)			=> array([6.5, 4.5, 2.5])
+np.median(a, axis=1)			=> array([7.,  2.])
+
+4. average : 평균값/ weight 부여 가능
+
+data = array([1, 2, 3, 4])
+np.average(data)						=> 2.5
+np.average(np.arange(1, 11), weights=np.arange(10, 0, -1))	=> 4.0
+
+5. mean : 평균값
+
+a = np.array([[1, 2], [3, 4]])
+np.mean(a)					=> 2.5
+np.mean(a, axis=0)					=> array([2., 3.])
+
+
+6. std/ var : 표준편차/분산
+
+a = np.array([[1, 2], [3, 4]])
+np.std(a)						=> 1.1180339887498949
+np.std(a, axis=0)					=> array([1.,  1.])
+
