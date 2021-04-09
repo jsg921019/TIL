@@ -1,0 +1,5 @@
+.vscode/
+data/
+runs/
+backup/
+.ipynb_checkpoints/
