@@ -1,0 +1,418 @@
+<Problem 71>
+
+Consider the fraction, n/d, where n and d are positive integers. If n<d and HCF(n,d)=1, it is called a reduced proper fraction.
+If we list the set of reduced proper fractions for d ≤ 8 in ascending order of size, we get:
+1/8, 1/7, 1/6, 1/5, 1/4, 2/7, 1/3, 3/8, 2/5, 3/7, 1/2, 4/7, 3/5, 5/8, 2/3, 5/7, 3/4, 4/5, 5/6, 6/7, 7/8
+It can be seen that 2/5 is the fraction immediately to the left of 3/7.
+By listing the set of reduced proper fractions for d ≤ 1,000,000 in ascending order of size, find the numerator of the fraction immediately to the left of 3/7.
+
+Answer: Farey sequence
+
+def PE71(L=10**6,a=2,b=5,c=3,d=7):
+    while b+d<=L:a,b=a+c,b+d
+    return a
+
+<Problem 72>
+
+Consider the fraction, n/d, where n and d are positive integers. If n<d and HCF(n,d)=1, it is called a reduced proper fraction.
+If we list the set of reduced proper fractions for d ≤ 8 in ascending order of size, we get:
+1/8, 1/7, 1/6, 1/5, 1/4, 2/7, 1/3, 3/8, 2/5, 3/7, 1/2, 4/7, 3/5, 5/8, 2/3, 5/7, 3/4, 4/5, 5/6, 6/7, 7/8
+It can be seen that there are 21 elements in this set.
+How many elements would be contained in the set of reduced proper fractions for d ≤ 1,000,000?
+
+Answer: Sum of phi(n)
+
+phi_n =[n for n in range(1000001)]
+
+for i in range(2, len(phi_n)):
+    if phi_n[i] == i :
+        for j in range(i, len(phi_n), i):
+            phi_n[j] = (phi_n[j]*(i-1))//i
+
+print(sum(phi_n[2:]))
+
+
+<Problem 73>
+
+Consider the fraction, n/d, where n and d are positive integers. If n<d and HCF(n,d)=1, it is called a reduced proper fraction.
+If we list the set of reduced proper fractions for d ≤ 8 in ascending order of size, we get:
+1/8, 1/7, 1/6, 1/5, 1/4, 2/7, 1/3,    3/8, 2/5, 3/7,    1/2, 4/7, 3/5, 5/8, 2/3, 5/7, 3/4, 4/5, 5/6, 6/7, 7/8
+It can be seen that there are 3 fractions between 1/3 and 1/2.
+How many fractions lie between 1/3 and 1/2 in the sorted set of reduced proper fractions for d ≤ 12,000?
+
+Answer1: Brute Force
+
+from math import gcd
+count = 0
+for d in range(3,12001):
+    for n in range(d//3 +1, d//2+1):
+        if gcd(d,n) == 1 : count += 1
+print(count)
+
+Answer: counting next Fereys
+
+a, b, lim, count = 1, 3, 12000, 0
+c, d = ((lim-8)//3)+3, ((lim-8)//3)*3+8
+while (c, d) != (1, 2):
+    count+=1
+    k = (lim+ b)//d
+    a, b, c, d = c, d, k*c-a, k*d-b
+print(count)
+
+<Problem 74>
+
+Answer1: permutation
+
+from itertools import combinations_with_replacement, permutations
+from math import factorial
+from functools import lru_cache
+
+@lru_cache(maxsize=None)
+def calc_sum_fact(n):
+    return sum([facts[c] for c in str(n)])
+    
+facts = { str(i):factorial(i) for i in range(10) }
+res = 0
+
+for comb in combinations_with_replacement("0123456789", 6):
+    n = int("".join(comb))
+    ns = str(n)
+    s = set([n])
+    while True:
+        n = calc_sum_fact(n)
+        if n not in s:
+            s.add(n)
+        else:
+            break
+    if len(s) == 60:
+        res += len({perm for perm in permutations(ns) if perm[0] != '0'})
+        for n_1 in range(1, ns.count('1') + 1):
+            ns_0 = ns.replace("1", "0", n_1)
+            res += len({perm for perm in permutations(ns_0) if perm[0] != '0'})
+    
+print(res)
+
+Answer2:
+
+from time import time
+from itertools import combinations_with_replacement
+from functools import reduce
+
+start = time()
+
+Fact = [1, 1, 2, 6, 24, 120, 720, 5040, 40320, 362880]
+ChainCache = {}
+
+def digitsum(i):
+    dsum = 0
+    while i:
+        rem = i % 10
+        dsum += Fact[rem]
+        i //= 10
+    return dsum
+
+def chain_len(i):
+    def recurse(i, chain):
+        if i in ChainCache:
+            return ChainCache[i]
+        if i in chain:
+            return 0
+        chain.add(i)
+        length = 1 + recurse(digitsum(i), chain)
+        ChainCache[i] = length
+        return length
+    return recurse(i, set())
+
+def p74():
+    count60 = 0
+    for pow10 in range(1, 7):
+        for combo in combinations_with_replacement(range(1, 10), pow10):
+            num = reduce(lambda x,y : x*10 + y, combo)
+            if chain_len(num) != 60:
+                continue
+            digit_freq = [combo.count(digit) for digit in range(10)]
+            combo_count = int(2**digit_freq[1] * Fact[pow10-1] * (pow10 - digit_freq[1]/2))
+            for i in digit_freq:
+                combo_count //= Fact[i]
+            print(num, combo_count)
+            count60 += combo_count
+    return count60
+
+print(p74())
+
+print("Time: {0} secs".format(time()-start))
+
+<Problem 75>
+
+It turns out that 12 cm is the smallest length of wire that can be bent to form an integer sided right angle triangle in exactly one way, but there are many more examples.
+12 cm: (3,4,5)
+24 cm: (6,8,10)
+30 cm: (5,12,13)
+36 cm: (9,12,15)
+40 cm: (8,15,17)
+48 cm: (12,16,20)
+In contrast, some lengths of wire, like 20 cm, cannot be bent to form an integer sided right angle triangle, and other lengths allow more than one solution to be found; for example, using 120 cm it is possible to form exactly three different integer sided right angle triangles.
+120 cm: (30,40,50), (20,48,52), (24,45,51)
+Given that L is the length of the wire, for how many values of L ≤ 1,500,000 can exactly one integer sided right angle triangle be formed?
+
+Answer1 : Pythagorean triples can be generated from the (3, 4, 5) triangle by using the three linear transformations
+
+max = 1500000
+count = bytearray(max+1)
+
+def transform(x, y, z):
+    len = x+y+z
+    if(len>max) :  return
+    for l in range(len, max+1, len):
+        count[l] +=1
+    transform( x-2*y+2*z,  2*x-y+2*z,  2*x-2*y+3*z)
+    transform( x+2*y+2*z,  2*x+y+2*z,  2*x+2*y+3*z)
+    transform(-x+2*y+2*z, -2*x+y+2*z, -2*x+2*y+3*z)
+
+transform(3, 4, 5)
+print(count.count(1))
+
+Answer2:
+
+'''
+pythagorian triples m>n, gcd(m,n)=1, m and n not both odd
+
+a           b          c            L
+m^2-n^2     2mn        m^2+n^c      2*m*(m+n)
+
+let s = m+n
+then, b+c= (m+n)^2 < L  =>    s < sqrt(L) and s is odd
+      m>n               =>    s/2 < m < s
+
+'''
+
+lim= 1500000
+l=[0]*(lim+1)
+from math import sqrt, gcd
+for s in range(3,int(sqrt(lim))+1,2):
+    for m in range((s//2)+ 1, s):
+        if gcd(s,m)==1:
+            maxk = lim//(2*s*m)
+            for k in range(1, maxk+1): l[k*2*s*m] += 1
+
+<Problem 76>
+
+It is possible to write five as a sum in exactly six different ways:
+4 + 1
+3 + 2
+3 + 1 + 1
+2 + 2 + 1
+2 + 1 + 1 + 1
+1 + 1 + 1 + 1 + 1
+How many different ways can one hundred be written as a sum of at least two positive integers?
+
+Answer1: Recursive
+
+def count(n,m,cache={}):
+    if m <=1 : return 1
+    if (n,m) in cache: return cache[(n,m)] 
+    cache[(n,m)] = sum([count(n-i,min(i,n-i)) for i in range(1,m+1)])
+    return cache[(n,m)]
+print(count(100,99))
+
+Answer2: Dynamic Programming ( similar to P31 )
+
+num = 100
+ways = [1] + [0]*num
+for n in range(1, num):
+    for i in range(n, num+1):
+        ways[i] += ways[i-n]
+print(ways[num])
+
+<Problem 77>
+
+It is possible to write ten as the sum of primes in exactly five different ways:
+7 + 3
+5 + 5
+5 + 3 + 2
+3 + 3 + 2 + 2
+2 + 2 + 2 + 2 + 2
+What is the first value which can be written as the sum of primes in over five thousand different ways?
+
+Answer1 : same as P76
+
+from primePy import primes
+
+l = primes.upto(100)
+ways = [1] + [0]*l[-1]
+
+for n in l:
+    for i in range(n, len(ways)):
+        ways[i] += ways[i-n]
+
+for i in range(1,len(ways)):
+    if ways[i]>=5000: print (i); break
+
+<Problem 78>
+
+Let p(n) represent the number of different ways in which n coins can be separated into piles. 
+For example, five coins can be separated into piles in exactly seven different ways, so p(5)=7.
+OOOOO
+OOOO   O
+OOO   OO
+OOO   O   O
+OO   OO   O
+OO   O   O   O
+O   O   O   O   O
+Find the least value of n for which p(n) is divisible by one million.
+
+Answer1 : euler partition recursion
+
+p=[1,1]
+d = 1000000
+n = 1
+while p[-1] != 0:
+    n += 1
+    i = 0
+    a = 0
+    s = -1
+    m1,m2 = 0, 0
+    while m1>=0 or m2>=0:
+        i += 1
+        m1 = n-(i*(3*i-1))//2
+        m2 = n-(i*(3*i+1))//2
+        s *= -1
+        if m1 >= 0 : a += s*p[m1]
+        if m2 >= 0 : a += s*p[m2]
+    p.append(a%d)
+print(n)
+
+Answer2: use of memoization
+
+def Memoizer(fn):
+        memDict = {}
+        def wrapper(val):
+                if val not in memDict:
+                        memDict[val] = fn(val)
+                return memDict[val]
+        return wrapper
+
+@Memoizer
+def partition(n):
+        p = 0
+        if n == 0:
+                p = 1
+        elif n > 0:
+                k = 1
+                while True:
+                        sign = ( -1 ) ** ( k + 1 )
+                        n1 = int( k * ( k * 3 - 1 )  / 2)
+                        n2 = int( k * ( k * 3 + 1 )  / 2)
+                        if n < n1 and n < n2:
+                                break
+                        p += sign * ( partition( n - n1 ) + partition( n - n2 ))
+                        k += 1
+        return p
+
+def euler78():
+        div = int(1e6)
+        i = 0
+        p = 1
+        while p % div != 0:
+                i += 1
+                p = partition(i)
+        return i
+
+print euler78()
+
+Answer3:
+
+l=[1]
+pen=[[],[]]
+n=0; p=1
+m1=1; m2=1
+
+while p != 0:
+    n+=1
+    if n >= (m1*(3*m1-1))//2: pen[(m1+1)%2].append((m1*(3*m1-1))//2); m1 += 1
+    if n >= (m2*(3*m2+1))//2: pen[m1%2].append((m2*(3*m2+1))//2); m2 += 1
+    p = sum([l[n-pen[0][i]] for i in range(len(pen[0]))]) - sum([l[n-pen[1][i]] for i in range(len(pen[1]))])
+    p= p%1000000
+    l.append(p)
+    
+print(n)
+
+<Problem 79>
+
+A common security method used for online banking is to ask the user for three random characters from a passcode. 
+For example, if the passcode was 531278, they may ask for the 2nd, 3rd, and 5th characters; the expected reply would be: 317.
+The text file, keylog.txt, contains fifty successful login attempts.
+Given that the three characters are always asked for in order, analyse the file so as to determine the shortest possible secret passcode of unknown length.
+
+Answer:
+
+from collections import defaultdict
+
+nodes ,graph, answer = set(), defaultdict(set), str()
+
+for p in [list(a.strip()) for a in open('keylog.txt').readlines()]:
+    nodes.add(p[0])
+    for i in range(1,len(p)):
+        nodes.add(p[i])
+        graph[p[i]].add(p[i-1])
+
+nodes = list(nodes)
+
+while len(nodes):
+    for n in nodes:
+        if graph[n] == set():
+            answer +=  n
+            nodes.remove(n)
+            for k in graph: 
+                graph[k] -= {n}
+print(answer)
+
+Answer2: using networkx package
+
+import networkx as nx
+
+edges = list()
+with open('p079_keylog.txt', 'r') as txtin:
+    for digit1, digit2, digit3 in [list(line.strip()) for line in txtin]:
+        edges.append((digit1, digit2))
+        edges.append((digit2, digit3))
+
+graph = nx.DiGraph()
+graph.add_edges_from(edges)
+
+for node in nx.topological_sort(graph):
+    print(node, end='')
+
+
+<Problem 80>
+
+It is well known that if the square root of a natural number is not an integer, then it is irrational. 
+The decimal expansion of such square roots is infinite without any repeating pattern at all.
+The square root of two is 1.41421356237309504880..., and the digital sum of the first one hundred decimal digits is 475.
+For the first one hundred natural numbers, find the total of the digital sums of the first one hundred decimal digits for all the irrational square roots.
+
+Answer1:
+
+def decimal(num,lim):
+    b=0
+    c=num
+    l=[]
+    while len(l) < lim:
+        x=9
+        while x*x + b*x > c:
+            x-=1
+        l.append(x)
+        b, c = 10*(b+2*x), 100*(c-b*x-x*x)
+    return(l)
+        
+print(sum([sum(decimal(x,1000)) for x in range(101) if int(x**0.5)**2 != x]))
+
+Answer2: decimal library
+
+from decimal import getcontext, Decimal
+getcontext().prec = 105
+ans = 0
+for n in [n for n in range(100) if n not in [j*j for j in range(10)]]:
+    digits = str(Decimal(n).sqrt()).replace('.','')[:100]
+    ans += sum([int(d) for d in digits])
+print(ans)
